@@ -1,0 +1,6 @@
+logger:
+  level: INFO
+  format: console # json, console
+
+http:
+  port: 8080
