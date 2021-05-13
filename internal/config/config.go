@@ -13,6 +13,7 @@ type Config struct {
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	HTTP     HTTPConfig     `mapstructure:"http"`
 	DataBase DataBaseConfig `mapstructure:"database"`
+	Redis    RedisConfig    `mapstructure:"redis"`
 }
 
 type LoggerConfig struct {
@@ -41,6 +42,16 @@ type DataBaseConfig struct {
 	MaxIdleConn    int           `mapstructure:"max_idle_conn"`
 	MaxOpenConn    int           `mapstructure:"max_open_conn"`
 	SSLMode        bool          `mapstructure:"ssl_mode"`
+}
+
+type RedisConfig struct {
+	Host         string        `mapstructure:"host"`
+	Port         uint          `mapstructure:"port"`
+	DB           int           `mapstructure:"db"`
+	Password     string        `mapstructure:"password"`
+	MinIdleConns int           `mapstructure:"min_idle_conns"`
+	PoolSize     int           `mapstructure:"pool_size"`
+	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
 }
 
 func NewConfig(configPath string) (Config, error) {
