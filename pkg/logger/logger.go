@@ -22,32 +22,42 @@ const (
 	ConsoleFormat LogFormat = "console"
 )
 
-var _ logger.Interface = (*Logger)(nil)
-
 type Logger struct {
 	zerolog.Logger
 }
 
-func (logger Logger) LogMode(logger.LogLevel) logger.Interface {
+func (l Logger) WarpedGormLogger() GormLogger {
+	return GormLogger{l.Logger}
+}
+
+var (
+	_ logger.Interface = (*GormLogger)(nil)
+)
+
+type GormLogger struct {
+	logger zerolog.Logger
+}
+
+func (logger GormLogger) LogMode(logger.LogLevel) logger.Interface {
 	return logger
 }
 
-func (logger Logger) Info(ctx context.Context, format string, args ...interface{}) {
-	logger.Logger.Info().Msgf(format, args...)
+func (logger GormLogger) Info(ctx context.Context, format string, args ...interface{}) {
+	logger.logger.Info().Msgf(format, args...)
 }
 
-func (logger Logger) Warn(tx context.Context, format string, args ...interface{}) {
-	logger.Logger.Warn().Msgf(format, args...)
+func (logger GormLogger) Warn(tx context.Context, format string, args ...interface{}) {
+	logger.logger.Warn().Msgf(format, args...)
 }
 
-func (logger Logger) Error(tx context.Context, format string, args ...interface{}) {
-	logger.Logger.Error().Msgf(format, args...)
+func (logger GormLogger) Error(tx context.Context, format string, args ...interface{}) {
+	logger.logger.Error().Msgf(format, args...)
 }
 
-func (logger Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (logger GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	elapsed := time.Since(begin)
 	sql, row := fc()
-	logger.Logger.Trace().Dur("elapsed", elapsed).Str("sql", sql).Int64("row", row).Err(err).Msg("trace sql")
+	logger.logger.Trace().Dur("elapsed", elapsed).Str("sql", sql).Int64("row", row).Err(err).Msg("trace sql")
 }
 
 // NewLogger returns a Logger

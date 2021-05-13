@@ -26,6 +26,6 @@ func InitDatabase(config config.Config, logger logger.Logger) (*gorm.DB, error) 
 		database.SetMaxIdleConns(config.DataBase.MaxIdleConn),
 		database.SetMaxOpenConns(config.DataBase.MaxOpenConn),
 		database.SetConnMaxIdleTime(config.DataBase.MaxIdleTime),
-		database.SetLogger(logger),
+		database.SetLogger(logger.WarpedGormLogger()),
 	)
 }
