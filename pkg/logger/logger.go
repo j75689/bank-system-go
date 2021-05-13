@@ -54,6 +54,7 @@ func (logger Logger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 func NewLogger(logLevel string, logFormat LogFormat) (Logger, error) {
 	level := zerolog.InfoLevel
 	level, err := zerolog.ParseLevel(strings.ToLower(logLevel))
+
 	if err != nil {
 		return Logger{zerolog.Logger{}}, errors.Wrap(err, "init logger failed")
 	}
