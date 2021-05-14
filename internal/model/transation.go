@@ -11,7 +11,8 @@ type TransationType uint8
 const (
 	Deposit TransationType = iota + 1
 	Withdrawal
-	Transfer
+	InternalTransfer
+	ExternalTransfer
 )
 
 type Transation struct {

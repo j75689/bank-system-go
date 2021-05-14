@@ -6,9 +6,16 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type WalletType uint8
+
+const (
+	GeneralWallet WalletType = iota + 1
+)
+
 type Wallet struct {
 	ID            uint64          `json:"id" gorm:"primarykey"`
 	UserID        uint64          `json:"user_id" gorm:"index"`
+	Type          WalletType      `json:"type"`
 	AccountNumber string          `json:"account_number" gorm:"varchar(255);unique_index"`
 	CurrencyID    uint64          `json:"currency_id"`
 	Currency      Currency        `json:"currency"`
