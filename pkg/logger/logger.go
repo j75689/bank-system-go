@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm/logger"
@@ -30,9 +31,11 @@ func (l Logger) WarpedGormLogger() GormLogger {
 	return GormLogger{l.Logger}
 }
 
-var (
-	_ logger.Interface = (*GormLogger)(nil)
-)
+func (l Logger) WrapedWatermillLogger() WatermillLogger {
+	return WatermillLogger{l.Logger}
+}
+
+var _ logger.Interface = (*GormLogger)(nil)
 
 type GormLogger struct {
 	logger zerolog.Logger
@@ -58,6 +61,32 @@ func (logger GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (
 	elapsed := time.Since(begin)
 	sql, row := fc()
 	logger.logger.Trace().Dur("elapsed", elapsed).Str("sql", sql).Int64("row", row).Err(err).Msg("trace sql")
+}
+
+var _ watermill.LoggerAdapter = (*WatermillLogger)(nil)
+
+type WatermillLogger struct {
+	logger zerolog.Logger
+}
+
+func (logger WatermillLogger) Error(msg string, err error, fields watermill.LogFields) {
+	logger.logger.Error().Err(err).Fields(fields).Msg(msg)
+}
+
+func (logger WatermillLogger) Info(msg string, fields watermill.LogFields) {
+	logger.logger.Info().Fields(fields).Msg(msg)
+}
+
+func (logger WatermillLogger) Debug(msg string, fields watermill.LogFields) {
+	logger.logger.Debug().Fields(fields).Msg(msg)
+}
+
+func (logger WatermillLogger) Trace(msg string, fields watermill.LogFields) {
+	logger.logger.Trace().Fields(fields).Msg(msg)
+}
+
+func (logger WatermillLogger) With(fields watermill.LogFields) watermill.LoggerAdapter {
+	return logger
 }
 
 // NewLogger returns a Logger

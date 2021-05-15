@@ -17,6 +17,7 @@ func Initialize(configPath string) (Application, error) {
 		newApplication,
 		config.NewConfig,
 		wireset.InitLogger,
+		wireset.InitMQ,
 		http.NewHttpServer,
 	)
 	return Application{}, nil

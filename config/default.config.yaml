@@ -6,3 +6,10 @@ logger:
 
 http:
   port: 8080
+
+mq:
+  driver: kafka
+  kafka_option:
+    brokers: 
+      - localhost:9092
+    consumer_group: "bank"
