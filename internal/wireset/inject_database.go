@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDatabase(config config.Config, logger logger.Logger) (*gorm.DB, error) {
+func InitDatabase(config config.Config, log logger.Logger) (*gorm.DB, error) {
 	return database.NewDataBase(
 		config.DataBase.Driver,
 		config.DataBase.Host,
@@ -26,6 +26,6 @@ func InitDatabase(config config.Config, logger logger.Logger) (*gorm.DB, error) 
 		database.SetMaxIdleConns(config.DataBase.MaxIdleConn),
 		database.SetMaxOpenConns(config.DataBase.MaxOpenConn),
 		database.SetConnMaxIdleTime(config.DataBase.MaxIdleTime),
-		database.SetLogger(logger.WarpedGormLogger()),
+		database.SetLogger(logger.WarpGormLogger(log.Logger)),
 	)
 }

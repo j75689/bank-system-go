@@ -10,14 +10,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-func InitMQ(config config.Config, logger logger.Logger) (mq.MQ, error) {
+func InitMQ(config config.Config, log logger.Logger) (mq.MQ, error) {
 	switch strings.ToLower(config.MQ.Driver) {
 	case "kafka":
 		return kafka.NewKafkaMQ(kafka.KafkaOption{
 			Brokers:        config.MQ.KafkaOption.Brokers,
 			ConsumerGroup:  config.MQ.KafkaOption.ConsumerGroup,
 			OffsetsInitial: config.MQ.KafkaOption.OffsetsInitial,
-			LoggerAdapter:  logger.WrapedWatermillLogger(),
+			LoggerAdapter:  logger.WrapWatermillLogger(log.Logger),
 		})
 	}
 	return nil, errors.New("no supported driver [" + config.MQ.Driver + "]")

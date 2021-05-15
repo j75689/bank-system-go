@@ -27,14 +27,6 @@ type Logger struct {
 	zerolog.Logger
 }
 
-func (l Logger) WarpedGormLogger() GormLogger {
-	return GormLogger{l.Logger}
-}
-
-func (l Logger) WrapedWatermillLogger() WatermillLogger {
-	return WatermillLogger{l.Logger}
-}
-
 var _ logger.Interface = (*GormLogger)(nil)
 
 type GormLogger struct {
@@ -108,4 +100,12 @@ func NewLogger(logLevel string, logFormat LogFormat) (Logger, error) {
 	}
 
 	return Logger{zerolog.Logger{}}, errors.Errorf("not support log format [%s]", logFormat)
+}
+
+func WarpGormLogger(logger zerolog.Logger) GormLogger {
+	return GormLogger{logger}
+}
+
+func WrapWatermillLogger(logger zerolog.Logger) WatermillLogger {
+	return WatermillLogger{logger}
 }
