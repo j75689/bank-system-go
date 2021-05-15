@@ -16,7 +16,7 @@ type Wallet struct {
 	ID            uint64          `json:"id" gorm:"primarykey"`
 	UserID        uint64          `json:"user_id" gorm:"index"`
 	Type          WalletType      `json:"type"`
-	AccountNumber string          `json:"account_number" gorm:"varchar(255);unique_index"`
+	AccountNumber string          `json:"account_number" gorm:"varchar(255);uniqueIndex"`
 	CurrencyID    uint64          `json:"currency_id"`
 	Currency      Currency        `json:"currency"`
 	Balance       decimal.Decimal `json:"balance" gorm:"decimal(20,16);not null;default:0.0"`

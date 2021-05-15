@@ -16,6 +16,12 @@ var (
 	_ repository.TransationRepository = (*GORMRepository)(nil)
 )
 
+func NewGORMRepository(db *gorm.DB) *GORMRepository {
+	return &GORMRepository{
+		db: db,
+	}
+}
+
 type GORMRepository struct {
 	db *gorm.DB
 }
@@ -25,11 +31,11 @@ func (repo *GORMRepository) GetUser(ctx context.Context, filter model.User) (mod
 	return user, repo.db.WithContext(ctx).Where(filter).First(&user).Error
 }
 
-func (repo *GORMRepository) CreateUser(ctx context.Context, value model.User) error {
-	return repo.db.WithContext(ctx).Create(&value).Error
+func (repo *GORMRepository) CreateUser(ctx context.Context, value *model.User) error {
+	return repo.db.WithContext(ctx).Create(value).Error
 }
 
-func (repo *GORMRepository) UpdateUser(ctx context.Context, filter model.User, value model.User) error {
+func (repo *GORMRepository) UpdateUser(ctx context.Context, filter model.User, value *model.User) error {
 	return repo.db.WithContext(ctx).Where(filter).Updates(value).Error
 }
 

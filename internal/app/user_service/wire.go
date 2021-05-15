@@ -2,12 +2,11 @@
 
 //The build tag makes sure the stub is not built in the final build.
 
-package http
+package user
 
 import (
 	"bank-system-go/internal/config"
 	"bank-system-go/internal/controller"
-	"bank-system-go/internal/delivery/http"
 	"bank-system-go/internal/wireset"
 
 	"github.com/google/wire"
@@ -18,9 +17,11 @@ func Initialize(configPath string) (Application, error) {
 		newApplication,
 		config.NewConfig,
 		wireset.InitLogger,
+		wireset.InitDatabase,
 		wireset.InitMQ,
-		controller.NewGatewayController,
-		http.NewHttpServer,
+		wireset.RepositorySet,
+		wireset.ServiceV1Set,
+		controller.NewUserController,
 	)
 	return Application{}, nil
 }

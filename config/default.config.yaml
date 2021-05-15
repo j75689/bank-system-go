@@ -1,7 +1,7 @@
 release: false
 
 logger:
-  level: INFO
+  level: TRACE
   format: console # json, console
 
 http:
@@ -13,3 +13,11 @@ mq:
     brokers: 
       - localhost:9092
     consumer_group: "bank"
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: root
+  password: 123456
+  database: local
