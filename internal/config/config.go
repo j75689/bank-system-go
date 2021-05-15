@@ -10,6 +10,7 @@ import (
 )
 
 type Config struct {
+	Release  bool           `mapstructure:"release"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	HTTP     HTTPConfig     `mapstructure:"http"`
 	DataBase DataBaseConfig `mapstructure:"database"`
@@ -63,6 +64,7 @@ func NewConfig(configPath string) (Config, error) {
 	v.AutomaticEnv()
 
 	/* default */
+	v.SetDefault("release", false)
 	v.SetDefault("logger.level", "INFO")
 	v.SetDefault("logger.format", logger.ConsoleFormat)
 	v.SetDefault("http.port", "8080")

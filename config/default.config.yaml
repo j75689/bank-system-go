@@ -1,3 +1,5 @@
+release: false
+
 logger:
   level: INFO
   format: console # json, console

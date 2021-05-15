@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"bank-system-go/internal/service/http"
+	"bank-system-go/internal/app/http"
 
 	"github.com/spf13/cobra"
 )
