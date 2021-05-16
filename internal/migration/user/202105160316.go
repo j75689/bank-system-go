@@ -13,13 +13,18 @@ var v202105160316 = &gormigrate.Migration{
 		if err := tx.AutoMigrate(&model.User{}); err != nil {
 			return err
 		}
+		if err := tx.AutoMigrate(&model.AccessLog{}); err != nil {
+			return err
+		}
 		return nil
 	},
 	Rollback: func(tx *gorm.DB) error {
 		if err := tx.Migrator().DropTable(&model.User{}); err != nil {
 			return err
 		}
-
+		if err := tx.Migrator().DropTable(&model.AccessLog{}); err != nil {
+			return err
+		}
 		return nil
 	},
 }

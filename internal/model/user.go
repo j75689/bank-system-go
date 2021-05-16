@@ -7,7 +7,7 @@ type User struct {
 	UUID           string     `json:"uuid" gorm:"nchar(36)"`
 	Name           string     `json:"name" gorm:"nvarchar(255)"`
 	Account        string     `json:"account" gorm:"nvarchar(255);uniqueIndex"`
-	Password       []byte     `json:"-" gorm:"text"`
+	Password       []byte     `json:"password" gorm:"text"`
 	LatestAccessAt *time.Time `json:"latest_access_at"`
 	CreatedAt      time.Time  `json:"created_at" gorm:"not null;default:now()"`
 	UpdatedAt      time.Time  `json:"updated_at" gorm:"not null;default:now()"`

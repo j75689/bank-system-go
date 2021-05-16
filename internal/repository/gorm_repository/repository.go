@@ -43,6 +43,26 @@ func (repo *GORMRepository) DeleteUser(ctx context.Context, filter model.User) e
 	return repo.db.WithContext(ctx).Delete(filter).Error
 }
 
+func (repo *GORMRepository) CreateAccessLog(ctx context.Context, value *model.AccessLog) error {
+	return repo.db.WithContext(ctx).Create(value).Error
+}
+
+func (repo *GORMRepository) ListAccessLog(ctx context.Context, filter model.AccessLog,
+	pagination model.Pagination, sorting model.Sorting) ([]model.AccessLog, int64, error) {
+	var (
+		accesslogs = []model.AccessLog{}
+		total      int64
+	)
+	db := repo.db.WithContext(ctx).Where(filter)
+	err := db.Count(&total).Error
+	if err != nil {
+		return accesslogs, total, err
+	}
+
+	return accesslogs, total,
+		db.Scopes(pagination.LimitAndOffset, sorting.Sort).Find(&accesslogs).Error
+}
+
 func (repo *GORMRepository) GetWallet(ctx context.Context, filter model.Wallet) (model.Wallet, error) {
 	wallet := model.Wallet{}
 	return wallet, repo.db.WithContext(ctx).Where(filter).First(&wallet).Error

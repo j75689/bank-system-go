@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -36,65 +37,101 @@ func (m *_callbackMap) Delete(key string) {
 	delete(m.chans, key)
 }
 
-func NewGatewayController(logger logger.Logger, mq mq.MQ) *GatewayController {
+func NewGatewayController(logger logger.Logger, mq mq.MQ) (*GatewayController, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
 	return &GatewayController{
+		callbackTopic: hostname,
 		callbackChans: _callbackMap{
 			lock:  sync.RWMutex{},
 			chans: make(map[string]chan []byte),
 		},
 		logger: logger,
 		mq:     mq,
-	}
+	}, nil
 }
 
 type GatewayController struct {
+	_baseController
+	callbackTopic string
 	callbackChans _callbackMap
 	mq            mq.MQ
 	logger        logger.Logger
 }
 
-func (c *GatewayController) RegisterUser(ctx context.Context, requestID, gatewayTopic string, user model.User) (int, model.User, error) {
-	payload, err := json.Marshal(user)
-	if err != nil {
-		return http.StatusInternalServerError, model.User{}, err
-	}
-	message := Message{
-		RequestID:    requestID,
-		GatewayTopic: gatewayTopic,
-		Payload:      payload,
-	}
-	data, err := json.Marshal(message)
-	if err != nil {
-		return http.StatusInternalServerError, model.User{}, err
-	}
-	err = c.mq.Publish(_createUser, requestID, data)
-	if err != nil {
-		return http.StatusInternalServerError, model.User{}, err
-	}
-
+func (c *GatewayController) Wait(requestID string) []byte {
 	callback := make(chan []byte)
 	c.callbackChans.Set(requestID, callback)
-	data = <-callback
+	data := <-callback
 	close(callback)
 	c.callbackChans.Delete(requestID)
-
-	err = json.Unmarshal(data, &message)
-	if err != nil {
-		return http.StatusInternalServerError, model.User{}, err
-	}
-	err = json.Unmarshal(message.Payload, &user)
-	if err != nil {
-		return message.ResponseCode, model.User{}, errors.WithMessage(errors.New(string(message.Payload)), "create uer failed")
-	}
-	return message.ResponseCode, user, nil
+	return data
 }
 
-func (c *GatewayController) GatewayCallback(ctx context.Context, gatewayTopic string) error {
-	return c.mq.Subscribe(ctx, gatewayTopic, func(requestID string, data []byte) (bool, error) {
+func (c *GatewayController) GatewayCallback(ctx context.Context) error {
+	return c.mq.Subscribe(ctx, c.callbackTopic, func(requestID string, data []byte) (bool, error) {
 		callback, ok := c.callbackChans.Get(requestID)
 		if ok {
 			callback <- data
 		}
 		return true, nil
 	})
+}
+
+func (c *GatewayController) PushMessage(requestID string, code int, topic string, model interface{}) error {
+	payload, err := json.Marshal(model)
+	if err != nil {
+		return err
+	}
+	message := Message{
+		RequestID:    requestID,
+		GatewayTopic: c.callbackTopic,
+		ResponseCode: code,
+		Payload:      payload,
+	}
+	data, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	return c.mq.Publish(topic, requestID, data)
+}
+
+func (c *GatewayController) RegisterUser(ctx context.Context, requestID string, req model.RegisterUserRequest) (int, model.RegisterUserResponse, error) {
+	user := model.User{
+		Name:     req.Name,
+		Account:  req.Account,
+		Password: []byte(req.Password),
+	}
+	err := c.PushMessage(requestID, http.StatusOK, _createUser, user)
+	if err != nil {
+		return http.StatusInternalServerError, model.RegisterUserResponse{}, err
+	}
+	data := c.Wait(requestID)
+
+	message, err := c.Bind(data, &user)
+	if err != nil {
+		return message.ResponseCode, model.RegisterUserResponse{}, errors.WithMessage(err, "create user error")
+	}
+	return message.ResponseCode, model.RegisterUserResponse{
+		User: user,
+	}, nil
+}
+
+func (c *GatewayController) Login(ctx context.Context, requestID string, req model.UserLoginRequest) (int, model.UserLoginResponse, error) {
+	err := c.PushMessage(requestID, http.StatusOK, _userLogin, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.UserLoginResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.UserLoginResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.UserLoginResponse{}, errors.WithMessage(err, "user login error")
+	}
+	return message.ResponseCode, resp, nil
 }

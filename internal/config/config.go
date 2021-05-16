@@ -17,6 +17,7 @@ type Config struct {
 	DataBase DataBaseConfig `mapstructure:"database"`
 	Redis    RedisConfig    `mapstructure:"redis"`
 	MQ       MQConfig       `mapstructure:"mq"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
 }
 
 type LoggerConfig struct {
@@ -68,6 +69,11 @@ type KafkaOptionConfig struct {
 	OffsetsInitial int64    `mapstructure:"offsets_initial"`
 }
 
+type JWTConfig struct {
+	Secret string        `json:"secret"`
+	Age    time.Duration `json:"age"`
+}
+
 func NewConfig(configPath string) (Config, error) {
 	var file *os.File
 	file, _ = os.Open(configPath)
@@ -114,6 +120,10 @@ func NewConfig(configPath string) (Config, error) {
 	v.SetDefault("mq.kafka_option.brokers", []string{})
 	v.SetDefault("mq.kafka_option.consumer_group", "")
 	v.SetDefault("mq.kafka_option.offsets_initial", -2) // OffsetNewest = -1 ,OffsetOldest = -2
+
+	/* jwt */
+	v.SetDefault("jwt.secret", "")
+	v.SetDefault("jwt.age", 15*time.Minute)
 
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.ReadConfig(file)

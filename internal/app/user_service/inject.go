@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/go-gormigrate/gormigrate/v2"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +30,15 @@ func (application Application) Migrate() error {
 }
 
 func (application Application) Start() error {
-	return application.controller.CreateUser(context.Background())
+	ctx := context.Background()
+	errg := errgroup.Group{}
+	errg.Go(func() error {
+		return application.controller.CreateUser(ctx)
+	})
+	errg.Go(func() error {
+		return application.controller.UserLogin(ctx)
+	})
+	return errg.Wait()
 }
 
 func newApplication(
