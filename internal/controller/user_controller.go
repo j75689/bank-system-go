@@ -68,3 +68,40 @@ func (c *UserController) UserLogin(ctx context.Context) error {
 		return true, c.mq.Publish(message.GatewayTopic, requestID, data)
 	})
 }
+
+func (c *UserController) VerifyUser(ctx context.Context) error {
+	return c.mq.Subscribe(ctx, _verifyUser, func(requestID string, data []byte) (bool, error) {
+		req := model.VerifyUserRequest{}
+		message, err := c.Bind(data, &req)
+		if err != nil {
+			return true, err
+		}
+
+		claim, err := c.userSvc.VerifyJWT(ctx, req.Token)
+		if err != nil {
+			message.ResponseCode = http.StatusForbidden
+			message.ResponseError = err.Error()
+			data, err = c.MarshalMessage(message, model.VerifyUserResponse{
+				Islegal: false,
+			})
+			if err != nil {
+				return true, err
+			}
+			return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+		}
+		user, err := c.userSvc.GetUser(ctx, model.User{UUID: claim.Id})
+		if err != nil {
+			message.ResponseCode = http.StatusForbidden
+			message.ResponseError = err.Error()
+		}
+
+		data, err = c.MarshalMessage(message, model.VerifyUserResponse{
+			Islegal: true,
+			User:    user,
+		})
+		if err != nil {
+			return true, err
+		}
+		return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+	})
+}

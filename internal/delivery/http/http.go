@@ -7,6 +7,7 @@ import (
 	"bank-system-go/pkg/logger"
 	"context"
 	"net/http"
+	"strings"
 
 	ginLogger "github.com/gin-contrib/logger"
 	"github.com/gin-gonic/contrib/gzip"
@@ -16,7 +17,12 @@ import (
 )
 
 const (
-	requestIDHeaderName = "X-Request-Id"
+	_requestIDHeaderName      = "X-Request-Id"
+	_authenticationHeaderName = "Authentication"
+)
+
+const (
+	_userContextKey = "user_from_context"
 )
 
 type HttpServer struct {
@@ -60,16 +66,18 @@ func (server *HttpServer) setRouter() {
 		apiV1 := server.engine.Group("/api/v1")
 		apiV1.POST("/register", server.Register)
 		apiV1.POST("/login", server.Login)
+		apiV1.Use(server.AuthMiddleware)
+		apiV1.POST("/wallet", server.CreateWallet)
 	}
 }
 
 func (server *HttpServer) RequestIDMiddleware(ctx *gin.Context) {
 	uuid := uuid.New().String()
-	if requestID := ctx.GetHeader(requestIDHeaderName); len(requestID) > 0 {
+	if requestID := ctx.GetHeader(_requestIDHeaderName); len(requestID) > 0 {
 		uuid = requestID
 	}
-	ctx.Set(requestIDHeaderName, uuid)
-	ctx.Header(requestIDHeaderName, uuid)
+	ctx.Set(_requestIDHeaderName, uuid)
+	ctx.Header(_requestIDHeaderName, uuid)
 
 	ctx.Next()
 }
@@ -86,12 +94,15 @@ func (server *HttpServer) Run(addr ...string) error {
 }
 
 func (server *HttpServer) RequestID(c *gin.Context) string {
-	v, _ := c.Get(requestIDHeaderName)
-	requestID, ok := v.(string)
-	if ok {
-		return requestID
+	v, ok := c.Get(_requestIDHeaderName)
+	if !ok {
+		return uuid.New().String()
 	}
-	return uuid.New().String()
+	requestID, ok := v.(string)
+	if !ok {
+		return uuid.New().String()
+	}
+	return requestID
 }
 
 func (server *HttpServer) Register(c *gin.Context) {
@@ -120,6 +131,50 @@ func (server *HttpServer) Login(c *gin.Context) {
 	}
 	req.IP = c.ClientIP()
 	code, resp, err := server.controller.Login(c, server.RequestID(c), req)
+	if err != nil {
+		c.AbortWithError(code, err)
+		return
+	}
+	c.JSON(code, resp)
+}
+
+func (server *HttpServer) GetUser(c *gin.Context) model.User {
+	v, ok := c.Get(_userContextKey)
+	if !ok {
+		return model.User{}
+	}
+	user, ok := v.(model.User)
+	if !ok {
+		return model.User{}
+	}
+	return user
+}
+
+func (server *HttpServer) AuthMiddleware(c *gin.Context) {
+	req := model.VerifyUserRequest{
+		Token: strings.TrimPrefix(c.GetHeader(_authenticationHeaderName), "Bearer "),
+	}
+
+	code, resp, err := server.controller.VerifyUser(c, server.RequestID(c), req)
+	if err != nil {
+		c.AbortWithError(code, err)
+		return
+	}
+
+	c.Set(_userContextKey, resp.User)
+	c.Next()
+}
+
+func (server *HttpServer) CreateWallet(c *gin.Context) {
+	req := model.CreateWalletRequest{}
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	code, resp, err := server.controller.CreateWallet(c, server.RequestID(c), server.GetUser(c), req)
 	if err != nil {
 		c.AbortWithError(code, err)
 		return

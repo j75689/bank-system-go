@@ -23,7 +23,7 @@ func InitMQ(config config.Config, log logger.Logger) (queue mq.MQ, err error) {
 	default:
 		err = errors.New("no supported driver [" + config.MQ.Driver + "]")
 	}
-	if queue != nil {
+	if queue != nil && err == nil {
 		queue.SubscriberMiddleware(func(key string, data []byte) {
 			log.Info().Str("request_id", key).Bytes("message", data).Send()
 		})

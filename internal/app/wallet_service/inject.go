@@ -1,9 +1,9 @@
-package user
+package wallet
 
 import (
 	"bank-system-go/internal/config"
 	"bank-system-go/internal/controller"
-	"bank-system-go/internal/migration/user"
+	"bank-system-go/internal/migration/wallet"
 	"bank-system-go/pkg/logger"
 	"context"
 	"fmt"
@@ -17,11 +17,11 @@ type Application struct {
 	logger     logger.Logger
 	config     config.Config
 	db         *gorm.DB
-	controller *controller.UserController
+	controller *controller.WalletController
 }
 
 func (application Application) Migrate() error {
-	m := gormigrate.New(application.db, gormigrate.DefaultOptions, user.Migrations)
+	m := gormigrate.New(application.db, gormigrate.DefaultOptions, wallet.Migrations)
 	if err := m.Migrate(); err != nil {
 		return err
 	}
@@ -33,14 +33,9 @@ func (application Application) Start() error {
 	ctx := context.Background()
 	errg := errgroup.Group{}
 	errg.Go(func() error {
-		return application.controller.CreateUser(ctx)
+		return application.controller.CreateWallet(ctx)
 	})
-	errg.Go(func() error {
-		return application.controller.UserLogin(ctx)
-	})
-	errg.Go(func() error {
-		return application.controller.VerifyUser(ctx)
-	})
+
 	return errg.Wait()
 }
 
@@ -48,7 +43,7 @@ func newApplication(
 	logger logger.Logger,
 	config config.Config,
 	db *gorm.DB,
-	controller *controller.UserController,
+	controller *controller.WalletController,
 ) Application {
 	return Application{
 		logger:     logger,

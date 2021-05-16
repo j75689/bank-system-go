@@ -21,3 +21,21 @@ type UserLoginResponse struct {
 	Type  string `json:"type"`
 	Token string `json:"token"`
 }
+
+type VerifyUserRequest struct {
+	Token string `json:"token"`
+}
+
+type VerifyUserResponse struct {
+	Islegal bool `json:"is_legal"`
+	User    User `json:"User"`
+}
+
+type CreateWalletRequest struct {
+	Type       WalletType `json:"type"`
+	CurrencyID uint64     `json:"currency_id"`
+}
+
+type CreateWalletResponse struct {
+	Wallet
+}

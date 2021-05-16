@@ -68,11 +68,11 @@ func (repo *GORMRepository) GetWallet(ctx context.Context, filter model.Wallet) 
 	return wallet, repo.db.WithContext(ctx).Where(filter).First(&wallet).Error
 }
 
-func (repo *GORMRepository) CreateWallet(ctx context.Context, value model.Wallet) error {
-	return repo.db.WithContext(ctx).Create(&value).Error
+func (repo *GORMRepository) CreateWallet(ctx context.Context, value *model.Wallet) error {
+	return repo.db.WithContext(ctx).Create(value).Error
 }
 
-func (repo *GORMRepository) UpdateWallet(ctx context.Context, filter model.Wallet, value model.Wallet) error {
+func (repo *GORMRepository) UpdateWallet(ctx context.Context, filter model.Wallet, value *model.Wallet) error {
 	return repo.db.WithContext(ctx).Where(filter).Updates(value).Error
 }
 
@@ -127,8 +127,8 @@ func (repo *GORMRepository) ListTransation(
 		db.Scopes(pagination.LimitAndOffset, sorting.Sort).Find(&transations).Error
 }
 
-func (repo *GORMRepository) CreateTransation(ctx context.Context, value model.Transation) error {
-	return repo.db.WithContext(ctx).Create(&value).Error
+func (repo *GORMRepository) CreateTransation(ctx context.Context, value *model.Transation) error {
+	return repo.db.WithContext(ctx).Create(value).Error
 }
 
 func (repo *GORMRepository) DeleteTransation(ctx context.Context, filter model.Transation) error {

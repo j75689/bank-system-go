@@ -23,6 +23,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(httpCmd, UserCmd)
+	rootCmd.AddCommand(httpCmd, UserCmd, WalletCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config/default.config.yaml", "config file")
 }

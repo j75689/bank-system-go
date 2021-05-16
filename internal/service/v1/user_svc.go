@@ -18,14 +18,16 @@ var _ service.UserService = (*UserService)(nil)
 
 func NewUserService(config config.Config, userRepo repository.UserRepository) service.UserService {
 	return &UserService{
-		config:   config,
-		userRepo: userRepo,
+		userRepo:  userRepo,
+		jwtSecret: []byte(config.JWT.Secret),
+		jwtAge:    config.JWT.Age,
 	}
 }
 
 type UserService struct {
-	config   config.Config
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
+	jwtSecret []byte
+	jwtAge    time.Duration
 }
 
 func (svc *UserService) Register(ctx context.Context, user model.User) (model.User, error) {
@@ -70,38 +72,44 @@ func (svc *UserService) Login(ctx context.Context, account, password, ip string)
 
 	now := time.Now()
 	claim := jwt.StandardClaims{
+		Id:        user.UUID,
 		IssuedAt:  now.Unix(),
 		NotBefore: now.Unix(),
-		ExpiresAt: now.Add(svc.config.JWT.Age).Unix(),
+		ExpiresAt: now.Add(svc.jwtAge).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claim)
-	return token.SigningString()
+	return token.SignedString(svc.jwtSecret)
 }
 
-func (svc *UserService) VerifyJWT(ctx context.Context, tokenStr string) error {
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+func (svc *UserService) VerifyJWT(ctx context.Context, tokenStr string) (jwt.StandardClaims, error) {
+	claim := jwt.StandardClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, &claim, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid token")
 		}
-		return svc.config.JWT.Secret, nil
+		return svc.jwtSecret, nil
 	})
 	if err != nil {
 		if ve, ok := err.(*jwt.ValidationError); ok {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-				return errors.New("that's not even a token")
+				return jwt.StandardClaims{}, errors.New("that's not even a token")
 			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
-				return errors.New("token is expired")
+				return jwt.StandardClaims{}, errors.New("token is expired")
 			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return errors.New("token not active yet")
+				return jwt.StandardClaims{}, errors.New("token not active yet")
 			} else {
-				return errors.New("invalid token")
+				return jwt.StandardClaims{}, errors.New("invalid token")
 			}
 		}
 	}
 	if !token.Valid {
-		return errors.New("invalid token")
+		return jwt.StandardClaims{}, errors.New("token valid failed")
 	}
 
-	return nil
+	return claim, nil
+}
+
+func (svc *UserService) GetUser(ctx context.Context, user model.User) (model.User, error) {
+	return svc.userRepo.GetUser(ctx, user)
 }

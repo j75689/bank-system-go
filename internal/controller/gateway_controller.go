@@ -135,3 +135,41 @@ func (c *GatewayController) Login(ctx context.Context, requestID string, req mod
 	}
 	return message.ResponseCode, resp, nil
 }
+
+func (c *GatewayController) VerifyUser(ctx context.Context, requestID string, req model.VerifyUserRequest) (int, model.VerifyUserResponse, error) {
+	err := c.PushMessage(requestID, http.StatusOK, _verifyUser, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.VerifyUserResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.VerifyUserResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.VerifyUserResponse{}, errors.WithMessage(err, "verify user error")
+	}
+	return message.ResponseCode, resp, nil
+}
+
+func (c *GatewayController) CreateWallet(ctx context.Context, requestID string, user model.User, req model.CreateWalletRequest) (int, model.CreateWalletResponse, error) {
+	wallet := model.Wallet{
+		UserID:     user.ID,
+		Type:       req.Type,
+		CurrencyID: req.CurrencyID,
+	}
+	err := c.PushMessage(requestID, http.StatusOK, _createWallet, wallet)
+	if err != nil {
+		return http.StatusInternalServerError, model.CreateWalletResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	message, err := c.Bind(data, &wallet)
+	if err != nil {
+		return message.ResponseCode, model.CreateWalletResponse{}, errors.WithMessage(err, "create wallet error")
+	}
+	return message.ResponseCode, model.CreateWalletResponse{
+		Wallet: wallet,
+	}, nil
+}
