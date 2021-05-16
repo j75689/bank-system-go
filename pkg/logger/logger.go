@@ -82,9 +82,9 @@ func (logger WatermillLogger) With(fields watermill.LogFields) watermill.LoggerA
 }
 
 // NewLogger returns a Logger
-func NewLogger(logLevel string, logFormat LogFormat) (Logger, error) {
+func NewLogger(logLevel string, logFormat LogFormat, opts ...Option) (logger Logger, err error) {
 	level := zerolog.InfoLevel
-	level, err := zerolog.ParseLevel(strings.ToLower(logLevel))
+	level, err = zerolog.ParseLevel(strings.ToLower(logLevel))
 
 	if err != nil {
 		return Logger{zerolog.Logger{}}, errors.Wrap(err, "init logger failed")
@@ -94,12 +94,18 @@ func NewLogger(logLevel string, logFormat LogFormat) (Logger, error) {
 
 	switch logFormat {
 	case JSONFormat:
-		return Logger{zerolog.New(os.Stdout).With().Caller().Timestamp().Logger()}, nil
+		logger = Logger{zerolog.New(os.Stdout).With().Caller().Timestamp().Logger()}
 	case ConsoleFormat:
-		return Logger{zerolog.New(os.Stdout).With().Caller().Timestamp().Logger().Output(zerolog.ConsoleWriter{Out: os.Stdout})}, nil
+		logger = Logger{zerolog.New(os.Stdout).With().Caller().Timestamp().Logger().Output(zerolog.ConsoleWriter{Out: os.Stdout})}
+	default:
+		err = errors.Errorf("not support log format [%s]", logFormat)
 	}
 
-	return Logger{zerolog.Logger{}}, errors.Errorf("not support log format [%s]", logFormat)
+	for _, opt := range opts {
+		logger = opt.Apply(logger)
+	}
+
+	return
 }
 
 func WarpGormLogger(logger zerolog.Logger) GormLogger {

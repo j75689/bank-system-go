@@ -6,5 +6,5 @@ import (
 )
 
 func InitLogger(config config.Config) (logger.Logger, error) {
-	return logger.NewLogger(config.Logger.Level, config.Logger.Format)
+	return logger.NewLogger(config.Logger.Level, config.Logger.Format, logger.WithFields(map[string]interface{}{"app_id": config.APPID}))
 }

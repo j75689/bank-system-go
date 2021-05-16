@@ -27,7 +27,6 @@ type UserController struct {
 
 func (c *UserController) CreateUser(ctx context.Context) error {
 	return c.mq.Subscribe(ctx, _createUser, func(requestID string, data []byte) (bool, error) {
-		c.logger.Info().Str("request_id", requestID).Bytes("message", data).Send()
 		message := Message{
 			ResponseCode: http.StatusOK,
 		}

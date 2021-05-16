@@ -10,6 +10,7 @@ import (
 )
 
 type Config struct {
+	APPID    string         `mapstructure:"app_id"`
 	Release  bool           `mapstructure:"release"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	HTTP     HTTPConfig     `mapstructure:"http"`
@@ -76,6 +77,7 @@ func NewConfig(configPath string) (Config, error) {
 	v.AutomaticEnv()
 
 	/* default */
+	v.SetDefault("app_id", "")
 	v.SetDefault("release", false)
 	v.SetDefault("logger.level", "INFO")
 	v.SetDefault("logger.format", logger.ConsoleFormat)

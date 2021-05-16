@@ -44,14 +44,16 @@ func NewKafkaMQ(option KafkaOption) (*KafkaMQ, error) {
 	}
 
 	return &KafkaMQ{
-		publisher:  publisher,
-		subscriber: subscriber,
+		publisher:     publisher,
+		subscriber:    subscriber,
+		subMiddleware: make([]func(key string, data []byte), 0),
 	}, nil
 }
 
 type KafkaMQ struct {
-	publisher  message.Publisher
-	subscriber message.Subscriber
+	publisher     message.Publisher
+	subscriber    message.Subscriber
+	subMiddleware []func(key string, data []byte)
 }
 
 func (mq *KafkaMQ) Publish(topic, key string, data []byte) error {
@@ -72,6 +74,9 @@ func (mq *KafkaMQ) Subscribe(ctx context.Context, topic string, process func(key
 	}
 
 	for m := range message {
+		for _, mid := range mq.subMiddleware {
+			mid(m.UUID, m.Payload)
+		}
 		isAck, err := process(m.UUID, m.Payload)
 		if err != nil {
 			for _, cb := range errCallBack {
@@ -86,6 +91,10 @@ func (mq *KafkaMQ) Subscribe(ctx context.Context, topic string, process func(key
 	}
 
 	return nil
+}
+
+func (mq *KafkaMQ) SubscriberMiddleware(middleware ...func(key string, data []byte)) {
+	mq.subMiddleware = append(mq.subMiddleware, middleware...)
 }
 
 func (mq *KafkaMQ) Close() error {

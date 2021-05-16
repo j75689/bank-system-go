@@ -1,3 +1,4 @@
+app_id: bank-go
 release: false
 
 logger:
