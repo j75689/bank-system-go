@@ -27,6 +27,7 @@ const (
 
 type HttpServer struct {
 	hostname   string
+	httpServer *http.Server
 	engine     *gin.Engine
 	controller *controller.GatewayController
 	logger     logger.Logger
@@ -86,15 +87,23 @@ func (server *HttpServer) RequestIDMiddleware(ctx *gin.Context) {
 	ctx.Next()
 }
 
-func (server *HttpServer) Run(addr ...string) error {
+func (server *HttpServer) Run(addr string) error {
 	errg := errgroup.Group{}
 	errg.Go(func() error {
 		return server.controller.GatewayCallback(context.Background())
 	})
 	errg.Go(func() error {
-		return server.engine.Run(addr...)
+		server.httpServer = &http.Server{
+			Addr:    addr,
+			Handler: server.engine,
+		}
+		return server.httpServer.ListenAndServe()
 	})
 	return errg.Wait()
+}
+
+func (server *HttpServer) Shutdown() error {
+	return server.httpServer.Close()
 }
 
 func (server *HttpServer) RequestID(c *gin.Context) string {

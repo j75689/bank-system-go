@@ -9,6 +9,7 @@ import (
 
 // Root command
 var (
+	timeout uint
 	cfgFile string
 	rootCmd = &cobra.Command{
 		SilenceUsage: true,
@@ -25,4 +26,6 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(httpCmd, userCmd, walletCmd, transactionCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config/default.config.yaml", "config file")
+	rootCmd.PersistentFlags().UintVar(&timeout, "timeout", 300, "graceful shutdown timeout (second)")
+
 }

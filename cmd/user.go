@@ -2,8 +2,10 @@ package cmd
 
 import (
 	user "bank-system-go/internal/app/user_service"
+	"bank-system-go/pkg/util"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -27,11 +29,7 @@ var (
 				fmt.Println(err.Error())
 				os.Exit(1)
 			}
-			err = app.Migrate()
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
+			util.Launch(app.Migrate, app.Stop, time.Duration(timeout)*time.Second)
 		},
 	}
 
@@ -46,11 +44,7 @@ var (
 				fmt.Println(err.Error())
 				os.Exit(1)
 			}
-			err = app.Start()
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
+			util.Launch(app.Start, app.Stop, time.Duration(timeout)*time.Second)
 		},
 	}
 )

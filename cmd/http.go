@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"bank-system-go/internal/app/http"
+	"bank-system-go/pkg/util"
 
 	"github.com/spf13/cobra"
 )
@@ -21,11 +23,7 @@ var (
 				fmt.Println(err.Error())
 				os.Exit(1)
 			}
-			err = app.Start()
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
+			util.Launch(app.Start, app.Stop, time.Duration(timeout)*time.Second)
 		},
 	}
 )

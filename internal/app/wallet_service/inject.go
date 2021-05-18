@@ -5,6 +5,7 @@ import (
 	"bank-system-go/internal/controller"
 	"bank-system-go/internal/migration/wallet"
 	"bank-system-go/pkg/logger"
+	"bank-system-go/pkg/mq"
 	"context"
 	"fmt"
 
@@ -18,6 +19,7 @@ type Application struct {
 	config     config.Config
 	db         *gorm.DB
 	controller *controller.WalletController
+	mq         mq.MQ
 }
 
 func (application Application) Migrate() error {
@@ -30,7 +32,6 @@ func (application Application) Migrate() error {
 }
 
 func (application Application) Start() error {
-
 	ctx := context.Background()
 	errg := errgroup.Group{}
 	errg.Go(func() error {
@@ -49,16 +50,29 @@ func (application Application) Start() error {
 	return errg.Wait()
 }
 
+func (application Application) Stop() error {
+	if err := application.mq.Close(); err != nil {
+		return err
+	}
+	db, err := application.db.DB()
+	if err != nil {
+		return err
+	}
+	return db.Close()
+}
+
 func newApplication(
 	logger logger.Logger,
 	config config.Config,
 	db *gorm.DB,
 	controller *controller.WalletController,
+	mq mq.MQ,
 ) Application {
 	return Application{
 		logger:     logger,
 		config:     config,
 		db:         db,
 		controller: controller,
+		mq:         mq,
 	}
 }
