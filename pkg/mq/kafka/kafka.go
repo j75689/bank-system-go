@@ -4,6 +4,8 @@ import (
 	"bank-system-go/pkg/mq"
 	"context"
 	"errors"
+	"fmt"
+	"runtime"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
@@ -63,7 +65,7 @@ func (mq *KafkaMQ) Publish(topic, key string, data []byte) error {
 	return mq.publisher.Publish(topic, message.NewMessage(key, message.Payload(data)))
 }
 
-func (mq *KafkaMQ) Subscribe(ctx context.Context, topic string, process func(key string, data []byte) (bool, error), errCallBack ...func(error)) error {
+func (mq *KafkaMQ) Subscribe(ctx context.Context, topic string, process func(key string, data []byte) (bool, error), errCallBack ...func(string, error)) error {
 	if process == nil {
 		return errors.New("process is nil function")
 	}
@@ -77,10 +79,30 @@ func (mq *KafkaMQ) Subscribe(ctx context.Context, topic string, process func(key
 		for _, mid := range mq.subMiddleware {
 			mid(m.UUID, m.Payload)
 		}
-		isAck, err := process(m.UUID, m.Payload)
+
+		// recover panic
+		f := func(key string, data []byte) (ack bool, err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					var msg string
+					for i := 2; ; i++ {
+						_, file, line, ok := runtime.Caller(i)
+						if !ok {
+							break
+						}
+						msg += fmt.Sprintf("%s:%d\n", file, line)
+					}
+					ack = true
+					err = errors.New(msg)
+				}
+			}()
+			return process(m.UUID, m.Payload)
+		}
+
+		isAck, err := f(m.UUID, m.Payload)
 		if err != nil {
 			for _, cb := range errCallBack {
-				cb(err)
+				cb(m.UUID, err)
 			}
 		}
 		if isAck {
