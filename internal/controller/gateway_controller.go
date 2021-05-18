@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 type _callbackMap struct {
@@ -80,13 +81,14 @@ func (c *GatewayController) GatewayCallback(ctx context.Context) error {
 	})
 }
 
-func (c *GatewayController) PushMessage(requestID string, code int, topic string, model interface{}) error {
+func (c *GatewayController) PushMessage(requestID string, code int, topic string, user model.User, model interface{}) error {
 	payload, err := json.Marshal(model)
 	if err != nil {
 		return err
 	}
 	message := Message{
 		RequestID:    requestID,
+		User:         user,
 		GatewayTopic: c.callbackTopic,
 		ResponseCode: code,
 		Payload:      payload,
@@ -105,7 +107,7 @@ func (c *GatewayController) RegisterUser(ctx context.Context, requestID string, 
 		Account:  req.Account,
 		Password: []byte(req.Password),
 	}
-	err := c.PushMessage(requestID, http.StatusOK, _createUser, user)
+	err := c.PushMessage(requestID, http.StatusOK, _createUser, model.User{}, user)
 	if err != nil {
 		return http.StatusInternalServerError, model.RegisterUserResponse{}, err
 	}
@@ -121,7 +123,7 @@ func (c *GatewayController) RegisterUser(ctx context.Context, requestID string, 
 }
 
 func (c *GatewayController) Login(ctx context.Context, requestID string, req model.UserLoginRequest) (int, model.UserLoginResponse, error) {
-	err := c.PushMessage(requestID, http.StatusOK, _userLogin, req)
+	err := c.PushMessage(requestID, http.StatusOK, _userLogin, model.User{}, req)
 	if err != nil {
 		return http.StatusInternalServerError, model.UserLoginResponse{}, err
 	}
@@ -137,7 +139,7 @@ func (c *GatewayController) Login(ctx context.Context, requestID string, req mod
 }
 
 func (c *GatewayController) VerifyUser(ctx context.Context, requestID string, req model.VerifyUserRequest) (int, model.VerifyUserResponse, error) {
-	err := c.PushMessage(requestID, http.StatusOK, _verifyUser, req)
+	err := c.PushMessage(requestID, http.StatusOK, _verifyUser, model.User{}, req)
 	if err != nil {
 		return http.StatusInternalServerError, model.VerifyUserResponse{}, err
 	}
@@ -158,7 +160,7 @@ func (c *GatewayController) CreateWallet(ctx context.Context, requestID string, 
 		Type:       req.Type,
 		CurrencyID: req.CurrencyID,
 	}
-	err := c.PushMessage(requestID, http.StatusOK, _createWallet, wallet)
+	err := c.PushMessage(requestID, http.StatusOK, _createWallet, user, wallet)
 	if err != nil {
 		return http.StatusInternalServerError, model.CreateWalletResponse{}, err
 	}
@@ -172,4 +174,45 @@ func (c *GatewayController) CreateWallet(ctx context.Context, requestID string, 
 	return message.ResponseCode, model.CreateWalletResponse{
 		Wallet: wallet,
 	}, nil
+}
+
+func (c *GatewayController) ListWallet(ctx context.Context, requestID string, user model.User, req model.ListWalletRequest) (int, model.ListWalletResponse, error) {
+	err := c.PushMessage(requestID, http.StatusOK, _listWallet, user, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.ListWalletResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.ListWalletResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.ListWalletResponse{}, errors.WithMessage(err, "list wallet error")
+	}
+	return message.ResponseCode, resp, nil
+}
+
+func (c *GatewayController) UpdateWalletBalance(ctx context.Context, requestID string, user model.User, req model.UpdateWalletBalanceRequest) (int, model.UpdateWalletBalanceResponse, error) {
+	if !(req.Type == model.Withdrawal || req.Type == model.Deposit) {
+		return http.StatusBadRequest, model.UpdateWalletBalanceResponse{}, errors.New("type is not withdrawal or deposit")
+	}
+	if req.Type == model.Withdrawal {
+		req.Amount = req.Amount.Abs().Mul(decimal.NewFromInt(-1))
+	}
+	if req.Type == model.Deposit {
+		req.Amount = req.Amount.Abs()
+	}
+	err := c.PushMessage(requestID, http.StatusOK, _updateWalletBalance, user, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.UpdateWalletBalanceResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.UpdateWalletBalanceResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.UpdateWalletBalanceResponse{}, errors.WithMessage(err, "list wallet error")
+	}
+	return message.ResponseCode, resp, nil
 }

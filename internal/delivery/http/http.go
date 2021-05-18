@@ -68,6 +68,8 @@ func (server *HttpServer) setRouter() {
 		apiV1.POST("/login", server.Login)
 		apiV1.Use(server.AuthMiddleware)
 		apiV1.POST("/wallet", server.CreateWallet)
+		apiV1.GET("/wallets", server.ListWallet)
+		apiV1.POST("/wallet/balance", server.UpdateWalletBalance)
 	}
 }
 
@@ -175,6 +177,40 @@ func (server *HttpServer) CreateWallet(c *gin.Context) {
 	}
 
 	code, resp, err := server.controller.CreateWallet(c, server.RequestID(c), server.GetUser(c), req)
+	if err != nil {
+		c.AbortWithError(code, err)
+		return
+	}
+	c.JSON(code, resp)
+}
+
+func (server *HttpServer) ListWallet(c *gin.Context) {
+	req := model.ListWalletRequest{}
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	code, resp, err := server.controller.ListWallet(c, server.RequestID(c), server.GetUser(c), req)
+	if err != nil {
+		c.AbortWithError(code, err)
+		return
+	}
+	c.JSON(code, resp)
+}
+
+func (server *HttpServer) UpdateWalletBalance(c *gin.Context) {
+	req := model.UpdateWalletBalanceRequest{}
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	code, resp, err := server.controller.UpdateWalletBalance(c, server.RequestID(c), server.GetUser(c), req)
 	if err != nil {
 		c.AbortWithError(code, err)
 		return

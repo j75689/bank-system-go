@@ -9,4 +9,5 @@ import (
 var ServiceV1Set = wire.NewSet(
 	v1.NewUserService,
 	v1.NewWalletService,
+	v1.NewTransationService,
 )

@@ -41,7 +41,13 @@ func (c *UserController) CreateUser(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, func(requestID string, e error) {
+		c.logger.Error().Str("request_id", requestID).Err(e).Msg("CreateUser error")
 	})
 }
 
@@ -65,7 +71,13 @@ func (c *UserController) UserLogin(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, func(requestID string, e error) {
+		c.logger.Error().Str("request_id", requestID).Err(e).Msg("UserLogin error")
 	})
 }
 
@@ -87,7 +99,11 @@ func (c *UserController) VerifyUser(ctx context.Context) error {
 			if err != nil {
 				return true, err
 			}
-			return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+			err = c.mq.Publish(message.GatewayTopic, requestID, data)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
 		}
 		user, err := c.userSvc.GetUser(ctx, model.User{UUID: claim.Id})
 		if err != nil {
@@ -102,6 +118,12 @@ func (c *UserController) VerifyUser(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		return true, c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, func(requestID string, e error) {
+		c.logger.Error().Str("request_id", requestID).Err(e).Msg("VerifyUser error")
 	})
 }

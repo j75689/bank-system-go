@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 var _ service.WalletService = (*WalletService)(nil)
@@ -27,4 +28,17 @@ type WalletService struct {
 func (svc *WalletService) CreateWallet(ctx context.Context, wallet model.Wallet) (model.Wallet, error) {
 	wallet.AccountNumber = uuid.New().String()
 	return wallet, svc.walletRepo.CreateWallet(ctx, &wallet)
+}
+
+func (svc *WalletService) GetWallet(ctx context.Context, filter model.Wallet) (model.Wallet, error) {
+	return svc.walletRepo.GetWallet(ctx, filter)
+}
+
+func (svc *WalletService) ListWallet(ctx context.Context, filter model.Wallet,
+	pagination model.Pagination, sorting model.Sorting) ([]model.Wallet, int64, error) {
+	return svc.walletRepo.ListWallet(ctx, filter, pagination, sorting)
+}
+
+func (svc *WalletService) UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transationType model.TransationType, amount decimal.Decimal) error {
+	return svc.walletRepo.UpdateBalance(ctx, filter, requestID, transationType, amount)
 }

@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	WalletCmd = &cobra.Command{
+	walletCmd = &cobra.Command{
 		Use:           "wallet",
 		Short:         "Wallet service command",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	WalletMigrate = &cobra.Command{
+	walletMigrate = &cobra.Command{
 		Use:           "migrate",
 		Short:         "Migrate database",
 		SilenceUsage:  true,
@@ -35,7 +35,7 @@ var (
 		},
 	}
 
-	WalletService = &cobra.Command{
+	walletService = &cobra.Command{
 		Use:           "start",
 		Short:         "Start wallet service",
 		SilenceUsage:  true,
@@ -56,5 +56,5 @@ var (
 )
 
 func init() {
-	WalletCmd.AddCommand(WalletMigrate, WalletService)
+	walletCmd.AddCommand(walletMigrate, walletService)
 }
