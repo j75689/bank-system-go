@@ -9,4 +9,5 @@ const (
 	_updateWalletBalance = "update_wallet_balance"
 	_createTransaction   = "create_transaction"
 	_listTransaction     = "list_transaction"
+	_transfer            = "transfer"
 )

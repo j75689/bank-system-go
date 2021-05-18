@@ -12,7 +12,6 @@ const (
 	Deposit TransactionType = iota + 1
 	Withdrawal
 	InternalTransfer
-	ExternalTransfer
 )
 
 type TransactionStatus uint8
@@ -30,6 +29,7 @@ type Transaction struct {
 	To         string            `json:"to"`
 	CurrencyID uint64            `json:"currency_id"`
 	Status     TransactionStatus `json:"status"`
+	Fee        decimal.Decimal   `json:"fee" gorm:"not null;default:'0.0'"`
 	Amount     decimal.Decimal   `json:"amount" gorm:"not null;default:'0.0'"`
 	Balance    decimal.Decimal   `json:"balance" gorm:"not null;default:'0.0'"`
 	Remark     string            `json:"remark" gorm:"type:varchar(50)"`

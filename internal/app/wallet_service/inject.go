@@ -42,6 +42,9 @@ func (application Application) Start() error {
 	errg.Go(func() error {
 		return application.controller.UpdateWalletBalance(ctx)
 	})
+	errg.Go(func() error {
+		return application.controller.Transfer(ctx)
+	})
 
 	return errg.Wait()
 }

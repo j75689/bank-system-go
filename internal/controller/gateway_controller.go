@@ -87,11 +87,11 @@ func (c *GatewayController) PushMessage(requestID string, code int, topic string
 		return err
 	}
 	message := Message{
-		RequestID:    requestID,
-		User:         user,
-		GatewayTopic: c.callbackTopic,
-		ResponseCode: code,
-		Payload:      payload,
+		RequestID:     requestID,
+		User:          user,
+		ResponseTopic: c.callbackTopic,
+		ResponseCode:  code,
+		Payload:       payload,
 	}
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -212,7 +212,7 @@ func (c *GatewayController) UpdateWalletBalance(ctx context.Context, requestID s
 	resp := model.UpdateWalletBalanceResponse{}
 	message, err := c.Bind(data, &resp)
 	if err != nil {
-		return message.ResponseCode, model.UpdateWalletBalanceResponse{}, errors.WithMessage(err, "list wallet error")
+		return message.ResponseCode, model.UpdateWalletBalanceResponse{}, errors.WithMessage(err, "update balance error")
 	}
 	return message.ResponseCode, resp, nil
 }
@@ -228,7 +228,28 @@ func (c *GatewayController) ListTransaction(ctx context.Context, requestID strin
 	resp := model.ListTransactionResponse{}
 	message, err := c.Bind(data, &resp)
 	if err != nil {
-		return message.ResponseCode, model.ListTransactionResponse{}, errors.WithMessage(err, "list wallet error")
+		return message.ResponseCode, model.ListTransactionResponse{}, errors.WithMessage(err, "list transaction error")
+	}
+	return message.ResponseCode, resp, nil
+}
+
+func (c *GatewayController) Transfer(ctx context.Context, requestID string, user model.User, req model.TransferRequest) (int, model.TransferResponse, error) {
+	if !(req.Type == model.InternalTransfer) {
+		return http.StatusBadRequest, model.TransferResponse{}, errors.New("type is not transfer")
+	}
+	req.Amount = req.Amount.Abs()
+
+	err := c.PushMessage(requestID, http.StatusOK, _transfer, user, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.TransferResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.TransferResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.TransferResponse{}, errors.WithMessage(err, "transfer error")
 	}
 	return message.ResponseCode, resp, nil
 }

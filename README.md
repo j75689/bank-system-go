@@ -32,6 +32,14 @@ curl -X POST -H 'content-type: application/json' -H "authentication: Bearer ${JW
 curl -X POST -H 'content-type: application/json' -H "authentication: Bearer ${JWT_TOKEN}" localhost:8080/api/v1/wallet/balance -d "{\"type\":2,\"account_number\":\"${ACCOUNT}\",\"amount\":100}" -i
 ```
 
+#### Transfer
+```bash
+JWT_TOEKN=...
+FROM=...
+TO=...
+curl -X POST -H 'content-type: application/json' -H "authentication: Bearer ${JWT_TOKEN}" localhost:8080/api/v1/transfer -d "{\"type\":3,\"from\":\"${FROM}\",\"to\":\"${TO}\",\"amount\":100}" -i
+```
+
 #### List Transaction
 ```bash
 JWT_TOEKN=...

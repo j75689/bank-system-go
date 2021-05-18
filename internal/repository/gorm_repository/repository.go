@@ -90,50 +90,104 @@ func (repo *GORMRepository) ListWallet(ctx context.Context, filter model.Wallet,
 }
 
 func (repo *GORMRepository) CreateWallet(ctx context.Context, value *model.Wallet) error {
-	return repo.db.WithContext(ctx).Create(value).Error
+	err := repo.db.WithContext(ctx).Create(value).Error
+	if err != nil {
+		return err
+	}
+	wallet, err := repo.GetWallet(ctx, model.Wallet{ID: value.ID})
+	if err != nil {
+		return err
+	}
+	*value = wallet
+	return nil
 }
 
 func (repo *GORMRepository) UpdateWallet(ctx context.Context, filter model.Wallet, value *model.Wallet) error {
 	return repo.db.WithContext(ctx).Where(filter).Updates(value).Error
 }
 
-func (repo *GORMRepository) UpdateBalance(ctx context.Context, filter model.Wallet, request_id string, transactionType model.TransactionType, amount decimal.Decimal) error {
+func (repo *GORMRepository) updateBalanceWithTx(tx *gorm.DB, filter model.Wallet, request_id string, transactionType model.TransactionType, amount, fee decimal.Decimal) error {
+	history := model.WalletHistory{
+		RequestID:       request_id,
+		UserID:          filter.UserID,
+		TransactionType: transactionType,
+		AccountNumber:   filter.AccountNumber,
+		Amount:          amount,
+		Fee:             fee.Abs(),
+	}
+	err := tx.Where(history).First(&history).Error
+	if err == nil {
+		// already existed
+		return nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	amount = amount.Sub(fee.Abs())
+	isLock := false
+	if amount.LessThan(decimal.Zero) {
+		isLock = true
+	}
+	db := tx.
+		Where(filter)
+
+	if isLock {
+		db = db.Where("cast(balance as decimal) >= ?", amount.Abs())
+	}
+
+	db = db.Model(model.Wallet{}).UpdateColumn("balance", gorm.Expr("cast(balance as decimal) + cast(? as decimal)", amount))
+	if err := db.Error; err != nil {
+		return err
+	}
+	if db.RowsAffected <= 0 {
+		return pkgErr.ErrWalletBalanceInsufficient
+	}
+	return tx.Model(model.WalletHistory{}).Create(&history).Error
+}
+
+func (repo *GORMRepository) UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transactionType model.TransactionType, amount, fee decimal.Decimal) error {
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.WithContext(ctx)
+		return repo.updateBalanceWithTx(tx, filter, requestID, transactionType, amount, fee)
+	})
+}
+
+func (repo *GORMRepository) Transfer(ctx context.Context, requestID string, from, to model.Wallet, transactionType model.TransactionType, amount, fee decimal.Decimal) error {
+	return repo.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.WithContext(ctx)
+		err := repo.updateBalanceWithTx(tx, from, requestID, transactionType, amount.Abs().Mul(decimal.NewFromInt(-1)), fee)
+		if err != nil {
+			return err
+		}
+
+		err = repo.updateBalanceWithTx(tx, to, requestID, transactionType, amount.Abs(), decimal.Zero)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (repo *GORMRepository) Revert(ctx context.Context, requestID, accountNumber string, transactionType model.TransactionType) error {
 	return repo.db.Transaction(func(tx *gorm.DB) error {
 		history := model.WalletHistory{
-			RequestID:       request_id,
-			UserID:          filter.UserID,
+			RequestID:       requestID,
+			AccountNumber:   accountNumber,
 			TransactionType: transactionType,
-			AccountNumber:   filter.AccountNumber,
-			Amount:          amount,
 		}
 		err := tx.Where(history).First(&history).Error
-		if err == nil {
-			// already existed
-			return nil
-		}
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err != nil {
 			return err
 		}
 
-		isLock := false
-		if amount.LessThan(decimal.Zero) {
-			isLock = true
-		}
-		db := tx.WithContext(ctx).
-			Where(filter)
-
-		if isLock {
-			db = db.Where("cast(balance as decimal) >= ?", amount.Abs())
+		amount := history.Amount.Mul(decimal.NewFromInt(-1)).Add(history.Fee)
+		db := tx.Model(model.Wallet{}).UpdateColumn("balance", gorm.Expr("cast(balance as decimal) + cast(? as decimal)", amount))
+		if db.Error != nil {
+			return db.Error
 		}
 
-		db = db.Model(model.Wallet{}).UpdateColumn("balance", gorm.Expr("cast(balance as decimal) + cast(? as decimal)", amount))
-		if err := db.Error; err != nil {
-			return err
-		}
-		if db.RowsAffected <= 0 {
-			return pkgErr.ErrWalletBalanceInsufficient
-		}
-		return tx.Model(model.WalletHistory{}).Create(&history).Error
+		return tx.Model(model.WalletHistory{}).Unscoped().Delete(history).Error
 	})
 }
 

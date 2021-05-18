@@ -9,4 +9,6 @@ var (
 	ErrGreaterThanMaxDepositAmount    = errors.New("amount is greater than maximin of deposit")
 	ErrLessThanMinWithdrawalAmount    = errors.New("amount is less than minimin of withdrawal")
 	ErrGreaterThanMaxWithdrawalAmount = errors.New("amount is greater than maximin of withdrawal")
+	ErrLessThanMinTransferAmount      = errors.New("amount is less than minimin of transfer")
+	ErrGreaterThanMaxTransferAmount   = errors.New("amount is greater than maximin of transfer")
 )

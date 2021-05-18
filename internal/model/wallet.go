@@ -19,7 +19,7 @@ type Wallet struct {
 	Type          WalletType      `json:"type"`
 	AccountNumber string          `json:"account_number" gorm:"type:varchar(255);uniqueIndex"`
 	CurrencyID    uint64          `json:"currency_id"`
-	Currency      Currency        `json:"currency"`
+	Currency      Currency        `json:"currency" gorm:"->"` // read only
 	Balance       decimal.Decimal `json:"balance" gorm:"not null;default:'0.0'"`
 	MinWithdrawal decimal.Decimal `json:"min_withdrawal" gorm:"not null;default:'100.0'"`
 	MaxWithdrawal decimal.Decimal `json:"max_withdrawal" gorm:"not null;default:'10000.0'"`
@@ -59,5 +59,6 @@ type WalletHistory struct {
 	TransactionType TransactionType `json:"transaction_type" gorm:"uniqueIndex:idx_request_account_type"`
 	AccountNumber   string          `json:"account_number" gorm:"type:varchar(255);uniqueIndex:idx_request_account_type"`
 	Amount          decimal.Decimal `json:"amount" gorm:"not null;default:'0.0'"`
+	Fee             decimal.Decimal `json:"fee" gorm:"not null;default:'0.0'"`
 	CreatedAt       time.Time       `json:"created_at" gorm:"not null;default:now()"`
 }

@@ -41,7 +41,7 @@ func (c *UserController) CreateUser(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.ResponseTopic, requestID, data)
 		if err != nil {
 			return false, err
 		}
@@ -71,7 +71,7 @@ func (c *UserController) UserLogin(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.ResponseTopic, requestID, data)
 		if err != nil {
 			return false, err
 		}
@@ -99,7 +99,7 @@ func (c *UserController) VerifyUser(ctx context.Context) error {
 			if err != nil {
 				return true, err
 			}
-			err = c.mq.Publish(message.GatewayTopic, requestID, data)
+			err = c.mq.Publish(message.ResponseTopic, requestID, data)
 			if err != nil {
 				return false, err
 			}
@@ -118,7 +118,7 @@ func (c *UserController) VerifyUser(ctx context.Context) error {
 		if err != nil {
 			return true, err
 		}
-		err = c.mq.Publish(message.GatewayTopic, requestID, data)
+		err = c.mq.Publish(message.ResponseTopic, requestID, data)
 		if err != nil {
 			return false, err
 		}

@@ -64,8 +64,9 @@ type UpdateWalletBalanceRequest struct {
 }
 
 type UpdateWalletBalanceResponse struct {
-	Error  *string `json:"error,omitempty"`
-	Wallet *Wallet `json:"wallet,omitempty"`
+	Error      *string      `json:"error,omitempty"`
+	Wallet     *Wallet      `json:"wallet,omitempty"`
+	Transation *Transaction `json:"transation,omitempty"`
 }
 
 type ListTransactionRequest struct {
@@ -85,4 +86,17 @@ type ListTransactionRequest struct {
 type ListTransactionResponse struct {
 	Total        int64         `json:"total"`
 	Transactions []Transaction `json:"transactions"`
+}
+
+type TransferRequest struct {
+	Type   TransactionType `json:"type"`
+	From   string          `json:"from"`
+	To     string          `json:"to"`
+	Amount decimal.Decimal `json:"amount"`
+}
+
+type TransferResponse struct {
+	Error      *string      `json:"error,omitempty"`
+	Wallet     *Wallet      `json:"wallet,omitempty"`
+	Transation *Transaction `json:"transation,omitempty"`
 }
