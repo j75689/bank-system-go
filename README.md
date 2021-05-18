@@ -43,5 +43,5 @@ curl -X POST -H 'content-type: application/json' -H "authentication: Bearer ${JW
 #### List Transaction
 ```bash
 JWT_TOEKN=...
-curl -X GET -H 'content-type: application/json' -H "authentication: Bearer ${JWT_TOKEN}" localhost:8080/api/v1/transactions -d "{\"account_number\":\"${ACCOUNT}\",\"pagination\":{\"page\":0,\"per_page\":50},\"created_at_lte\":1621351737}" -i
+curl -X GET -H 'content-type: application/json' -H "authentication: Bearer ${JWT_TOKEN}" localhost:8080/api/v1/transactions -d "{\"account_number\":\"${ACCOUNT}\",\"pagination\":{\"page\":0,\"per_page\":50}}" -i
 ```
