@@ -53,11 +53,11 @@ type Currency struct {
 }
 
 type WalletHistory struct {
-	ID             uint64          `json:"id" gorm:"primarykey"`
-	RequestID      string          `json:"request_id" gorm:"type:varchar(255);uniqueIndex:idx_request_account_type"`
-	UserID         uint64          `json:"user_id" gorm:"index"`
-	TransationType TransationType  `json:"transation_type" gorm:"uniqueIndex:idx_request_account_type"`
-	AccountNumber  string          `json:"account_number" gorm:"type:varchar(255);uniqueIndex:idx_request_account_type"`
-	Amount         decimal.Decimal `json:"amount" gorm:"not null;default:'0.0'"`
-	CreatedAt      time.Time       `json:"created_at" gorm:"not null;default:now()"`
+	ID              uint64          `json:"id" gorm:"primarykey"`
+	RequestID       string          `json:"request_id" gorm:"type:varchar(255);uniqueIndex:idx_request_account_type"`
+	UserID          uint64          `json:"user_id" gorm:"index"`
+	TransactionType TransactionType `json:"transaction_type" gorm:"uniqueIndex:idx_request_account_type"`
+	AccountNumber   string          `json:"account_number" gorm:"type:varchar(255);uniqueIndex:idx_request_account_type"`
+	Amount          decimal.Decimal `json:"amount" gorm:"not null;default:'0.0'"`
+	CreatedAt       time.Time       `json:"created_at" gorm:"not null;default:now()"`
 }

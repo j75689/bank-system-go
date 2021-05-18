@@ -7,5 +7,6 @@ const (
 	_createWallet        = "create_wallet"
 	_listWallet          = "list_wallet"
 	_updateWalletBalance = "update_wallet_balance"
-	_createTransation    = "create_transation"
+	_createTransaction   = "create_transaction"
+	_listTransaction     = "list_transaction"
 )

@@ -70,6 +70,7 @@ func (server *HttpServer) setRouter() {
 		apiV1.POST("/wallet", server.CreateWallet)
 		apiV1.GET("/wallets", server.ListWallet)
 		apiV1.POST("/wallet/balance", server.UpdateWalletBalance)
+		apiV1.GET("/transactions", server.ListTransaction)
 	}
 }
 
@@ -211,6 +212,23 @@ func (server *HttpServer) UpdateWalletBalance(c *gin.Context) {
 	}
 
 	code, resp, err := server.controller.UpdateWalletBalance(c, server.RequestID(c), server.GetUser(c), req)
+	if err != nil {
+		c.AbortWithError(code, err)
+		return
+	}
+	c.JSON(code, resp)
+}
+
+func (server *HttpServer) ListTransaction(c *gin.Context) {
+	req := model.ListTransactionRequest{}
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	code, resp, err := server.controller.ListTransaction(c, server.RequestID(c), server.GetUser(c), req)
 	if err != nil {
 		c.AbortWithError(code, err)
 		return

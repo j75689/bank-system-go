@@ -2,7 +2,7 @@
 
 //The build tag makes sure the stub is not built in the final build.
 
-package transation
+package transaction
 
 import (
 	"bank-system-go/internal/config"
@@ -21,7 +21,7 @@ func Initialize(configPath string) (Application, error) {
 		wireset.InitMQ,
 		wireset.RepositorySet,
 		wireset.ServiceV1Set,
-		controller.NewTransationController,
+		controller.NewTransactionController,
 	)
 	return Application{}, nil
 }

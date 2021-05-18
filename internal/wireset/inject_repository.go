@@ -11,7 +11,7 @@ var RepositorySet = wire.NewSet(
 	gorm_repository.NewGORMRepository,
 	InitUserRepository,
 	InitWalletRepository,
-	InitTransationRepository,
+	InitTransactionRepository,
 )
 
 func InitUserRepository(gorm *gorm_repository.GORMRepository) repository.UserRepository {
@@ -22,6 +22,6 @@ func InitWalletRepository(gorm *gorm_repository.GORMRepository) repository.Walle
 	return gorm
 }
 
-func InitTransationRepository(gorm *gorm_repository.GORMRepository) repository.TransationRepository {
+func InitTransactionRepository(gorm *gorm_repository.GORMRepository) repository.TransactionRepository {
 	return gorm
 }

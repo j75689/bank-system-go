@@ -100,8 +100,8 @@ func (c *WalletController) ListWallet(ctx context.Context) error {
 	})
 }
 
-func (c *WalletController) checkMinMax(transationType model.TransationType, wallet model.Wallet, amount decimal.Decimal) error {
-	switch transationType {
+func (c *WalletController) checkMinMax(transactionType model.TransactionType, wallet model.Wallet, amount decimal.Decimal) error {
+	switch transactionType {
 	case model.Deposit:
 		if amount.LessThan(wallet.MinDeposit) {
 			return pkgErr.ErrLessThanMinDepositAmount
@@ -193,7 +193,7 @@ func (c *WalletController) UpdateWalletBalance(ctx context.Context) error {
 
 		// TODO: outbox pattern
 		{
-			data, err = c.MarshalMessage(message, &model.Transation{
+			data, err = c.MarshalMessage(message, &model.Transaction{
 				UserID:     message.User.ID,
 				Type:       req.Type,
 				Status:     status,
@@ -206,7 +206,7 @@ func (c *WalletController) UpdateWalletBalance(ctx context.Context) error {
 			if err != nil {
 				return true, err
 			}
-			err = c.mq.Publish(_createTransation, requestID, data)
+			err = c.mq.Publish(_createTransaction, requestID, data)
 			if err != nil {
 				return false, err
 			}

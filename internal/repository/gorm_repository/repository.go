@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	_ repository.UserRepository       = (*GORMRepository)(nil)
-	_ repository.WalletRepository     = (*GORMRepository)(nil)
-	_ repository.TransationRepository = (*GORMRepository)(nil)
+	_ repository.UserRepository        = (*GORMRepository)(nil)
+	_ repository.WalletRepository      = (*GORMRepository)(nil)
+	_ repository.TransactionRepository = (*GORMRepository)(nil)
 )
 
 func NewGORMRepository(db *gorm.DB) *GORMRepository {
@@ -97,14 +97,14 @@ func (repo *GORMRepository) UpdateWallet(ctx context.Context, filter model.Walle
 	return repo.db.WithContext(ctx).Where(filter).Updates(value).Error
 }
 
-func (repo *GORMRepository) UpdateBalance(ctx context.Context, filter model.Wallet, request_id string, transationType model.TransationType, amount decimal.Decimal) error {
+func (repo *GORMRepository) UpdateBalance(ctx context.Context, filter model.Wallet, request_id string, transactionType model.TransactionType, amount decimal.Decimal) error {
 	return repo.db.Transaction(func(tx *gorm.DB) error {
 		history := model.WalletHistory{
-			RequestID:      request_id,
-			UserID:         filter.UserID,
-			TransationType: transationType,
-			AccountNumber:  filter.AccountNumber,
-			Amount:         amount,
+			RequestID:       request_id,
+			UserID:          filter.UserID,
+			TransactionType: transactionType,
+			AccountNumber:   filter.AccountNumber,
+			Amount:          amount,
 		}
 		err := tx.Where(history).First(&history).Error
 		if err == nil {
@@ -141,33 +141,33 @@ func (repo *GORMRepository) DeleteWallet(ctx context.Context, filter model.Walle
 	return repo.db.WithContext(ctx).Delete(filter).Error
 }
 
-func (repo *GORMRepository) GetTransation(ctx context.Context, filter model.Transation) (model.Transation, error) {
-	transation := model.Transation{}
-	return transation, repo.db.WithContext(ctx).Where(filter).First(&transation).Error
+func (repo *GORMRepository) GetTransaction(ctx context.Context, filter model.Transaction) (model.Transaction, error) {
+	transaction := model.Transaction{}
+	return transaction, repo.db.WithContext(ctx).Where(filter).First(&transaction).Error
 }
 
-func (repo *GORMRepository) ListTransation(
+func (repo *GORMRepository) ListTransaction(
 	ctx context.Context,
-	filter model.Transation,
-	pagination model.Pagination, sorting model.Sorting) ([]model.Transation, int64, error) {
+	filter model.Transaction,
+	baseFilter model.BaseFilter, pagination model.Pagination, sorting model.Sorting) ([]model.Transaction, int64, error) {
 	var (
-		transations = []model.Transation{}
-		total       int64
+		transactions = []model.Transaction{}
+		total        int64
 	)
-	db := repo.db.WithContext(ctx).Model(model.Transation{}).Where(filter)
+	db := repo.db.WithContext(ctx).Model(model.Transaction{}).Where(filter)
 	err := db.Count(&total).Error
 	if err != nil {
-		return transations, total, err
+		return transactions, total, err
 	}
 
-	return transations, total,
-		db.Scopes(pagination.LimitAndOffset, sorting.Sort).Find(&transations).Error
+	return transactions, total,
+		db.Scopes(baseFilter.Filter, pagination.LimitAndOffset, sorting.Sort).Find(&transactions).Error
 }
 
-func (repo *GORMRepository) CreateTransation(ctx context.Context, value *model.Transation) error {
+func (repo *GORMRepository) CreateTransaction(ctx context.Context, value *model.Transaction) error {
 	return repo.db.WithContext(ctx).Create(value).Error
 }
 
-func (repo *GORMRepository) DeleteTransation(ctx context.Context, filter model.Transation) error {
+func (repo *GORMRepository) DeleteTransaction(ctx context.Context, filter model.Transaction) error {
 	return repo.db.WithContext(ctx).Delete(filter).Error
 }

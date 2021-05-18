@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	transation "bank-system-go/internal/app/transation_service"
+	transaction "bank-system-go/internal/app/transaction_service"
 	"fmt"
 	"os"
 
@@ -9,20 +9,20 @@ import (
 )
 
 var (
-	transationCmd = &cobra.Command{
-		Use:           "transation",
-		Short:         "Transation service command",
+	transactionCmd = &cobra.Command{
+		Use:           "transaction",
+		Short:         "transaction service command",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	transationMigrate = &cobra.Command{
+	transactionMigrate = &cobra.Command{
 		Use:           "migrate",
 		Short:         "Migrate database",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Run: func(_ *cobra.Command, _ []string) {
-			app, err := transation.Initialize(cfgFile)
+			app, err := transaction.Initialize(cfgFile)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -35,13 +35,13 @@ var (
 		},
 	}
 
-	transationService = &cobra.Command{
+	transactionService = &cobra.Command{
 		Use:           "start",
-		Short:         "Start transation service",
+		Short:         "Start transaction service",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Run: func(_ *cobra.Command, _ []string) {
-			app, err := transation.Initialize(cfgFile)
+			app, err := transaction.Initialize(cfgFile)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -56,5 +56,5 @@ var (
 )
 
 func init() {
-	transationCmd.AddCommand(transationMigrate, transationService)
+	transactionCmd.AddCommand(transactionMigrate, transactionService)
 }

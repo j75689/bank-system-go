@@ -12,5 +12,5 @@ type WalletService interface {
 	GetWallet(ctx context.Context, filter model.Wallet) (model.Wallet, error)
 	ListWallet(ctx context.Context, filter model.Wallet,
 		pagination model.Pagination, sorting model.Sorting) ([]model.Wallet, int64, error)
-	UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transationType model.TransationType, amount decimal.Decimal) error
+	UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transactionType model.TransactionType, amount decimal.Decimal) error
 }

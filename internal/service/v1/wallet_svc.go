@@ -39,6 +39,6 @@ func (svc *WalletService) ListWallet(ctx context.Context, filter model.Wallet,
 	return svc.walletRepo.ListWallet(ctx, filter, pagination, sorting)
 }
 
-func (svc *WalletService) UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transationType model.TransationType, amount decimal.Decimal) error {
-	return svc.walletRepo.UpdateBalance(ctx, filter, requestID, transationType, amount)
+func (svc *WalletService) UpdateBalance(ctx context.Context, filter model.Wallet, requestID string, transactionType model.TransactionType, amount decimal.Decimal) error {
+	return svc.walletRepo.UpdateBalance(ctx, filter, requestID, transactionType, amount)
 }

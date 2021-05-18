@@ -1,4 +1,4 @@
-package transation
+package transaction
 
 import "github.com/go-gormigrate/gormigrate/v2"
 

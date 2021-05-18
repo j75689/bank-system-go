@@ -216,3 +216,19 @@ func (c *GatewayController) UpdateWalletBalance(ctx context.Context, requestID s
 	}
 	return message.ResponseCode, resp, nil
 }
+
+func (c *GatewayController) ListTransaction(ctx context.Context, requestID string, user model.User, req model.ListTransactionRequest) (int, model.ListTransactionResponse, error) {
+	err := c.PushMessage(requestID, http.StatusOK, _listTransaction, user, req)
+	if err != nil {
+		return http.StatusInternalServerError, model.ListTransactionResponse{}, err
+	}
+
+	data := c.Wait(requestID)
+
+	resp := model.ListTransactionResponse{}
+	message, err := c.Bind(data, &resp)
+	if err != nil {
+		return message.ResponseCode, model.ListTransactionResponse{}, errors.WithMessage(err, "list wallet error")
+	}
+	return message.ResponseCode, resp, nil
+}

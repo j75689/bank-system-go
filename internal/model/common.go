@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -51,5 +52,27 @@ func (s Sorting) Sort(db *gorm.DB) *gorm.DB {
 			sortfield = append(sortfield, fmt.Sprintf("%s %s", sort.Field, sort.Order))
 		}
 	}
-	return db.Order(strings.Join(sortfield, ","))
+
+	if len(sortfield) > 0 {
+		db = db.Order(strings.Join(sortfield, ","))
+	}
+
+	return db
+}
+
+type BaseFilter struct {
+	CreateAtGte time.Time `json:"create_at_gte,omitempty"`
+	CreateAtLte time.Time `json:"create_at_lte,omitempty"`
+}
+
+var _emptyTime = time.Time{}
+
+func (f BaseFilter) Filter(db *gorm.DB) *gorm.DB {
+	if f.CreateAtGte != _emptyTime {
+		db.Where("created_at >=?", f.CreateAtGte)
+	}
+	if f.CreateAtLte != _emptyTime {
+		db.Where("created_at <=?", f.CreateAtLte)
+	}
+	return db
 }
