@@ -1,0 +1,273 @@
+version: '3.4'
+services:
+    gateway:
+        container_name: gateway
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: http
+        ports: 
+            - 8080:8080
+        environment: 
+            - APP_ID=bank-gateway
+            - release=true
+            - LOGGER_LEVEL=TRACE
+            - LOGGER_FORMAT=json
+            - HTTP_PORT=8080
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-gateway
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+    
+    user_migrate:
+        container_name: user_migrate
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["user","migrate"]
+        environment: 
+            - APP_ID=bank-user-service
+            - release=true
+            - LOGGER_LEVEL=INFO
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-user-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+                
+
+    user_service:
+        container_name: user_service
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["user","start"]
+        environment: 
+            - APP_ID=bank-user-service
+            - release=true
+            - LOGGER_LEVEL=TRACE
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-user-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy 
+
+    wallet_service:
+        container_name: wallet_service
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["wallet","start"]
+        environment: 
+            - APP_ID=bank-wallet-service
+            - release=true
+            - LOGGER_LEVEL=TRACE
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-wallet-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+
+    wallet_migrate:
+        container_name: wallet_migrate
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["wallet","migrate"]
+        environment: 
+            - APP_ID=bank-wallet-service
+            - release=true
+            - LOGGER_LEVEL=INFO
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-wallet-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+                
+
+    transaction_migrate:
+        container_name: transaction_migrate
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["transaction","migrate"]
+        environment: 
+            - APP_ID=bank-transaction-service
+            - release=true
+            - LOGGER_LEVEL=INFO
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-transaction-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+
+    transaction_service:
+        container_name: transaction_service
+        image: j75689/bank-system-go
+        build:
+            context: ../../
+            dockerfile: build/Dockerfile
+        command: ["transaction","start"]
+        environment: 
+            - APP_ID=bank-transaction-service
+            - release=true
+            - LOGGER_LEVEL=TRACE
+            - LOGGER_FORMAT=json
+            - MQ_DRIVER=kafka
+            - MQ_KAFKA_OPTION_BROKERS=broker:9092
+            - MQ_KAFKA_OPTION_CONSUMER_GROUP=bank-transaction-service
+            - DATABASE_DRIVER=postgres
+            - DATABASE_HOST=db
+            - DATABASE_PORT=5432
+            - DATABASE_USER=bank
+            - DATABASE_PASSWORD=123456
+            - DATABASE_DATABASE=bank
+            - JWT_SECRET=abcdefg12345
+            - JWT_AGE=30m
+        depends_on:
+            db:
+                condition: service_healthy
+            zookeeper:
+                condition: service_healthy
+            broker:
+                condition: service_healthy
+
+    db:
+        container_name: db
+        image: postgres
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        ports: 
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: bank
+            POSTGRES_USER: bank
+            POSTGRES_PASSWORD: 123456
+
+    zookeeper:
+        container_name: zookeeper
+        image: confluentinc/cp-zookeeper:6.1.1
+        healthcheck:
+            test: nc -z localhost 2181
+            interval: 3s
+            timeout: 5s
+            retries: 5
+        ports:
+            - "2181:2181"
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+    
+    broker:
+        container_name: broker
+        image: confluentinc/cp-server:6.1.1
+        depends_on:
+            - zookeeper
+        healthcheck:
+            test: nc -z localhost 9092
+            interval: 3s
+            timeout: 5s
+            retries: 5
+        ports:
+            - "9092:9092"
+            - "9101:9101"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://0.0.0.0:29092
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://broker:9092
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+            KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+            KAFKA_JMX_PORT: 9101
+            KAFKA_JMX_HOSTNAME: broker
+           

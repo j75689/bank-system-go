@@ -4,6 +4,13 @@
 
 ![infrastructure](infra.png)
 
+#### Local Run
+```bash
+make docker-compose-build
+make docker-compose-up
+# shutdown
+make docker-compose-down
+```
 ## Test
 #### Create User
 ```bash
