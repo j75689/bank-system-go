@@ -196,6 +196,9 @@ func (c *GatewayController) UpdateWalletBalance(ctx context.Context, requestID s
 	if !(req.Type == model.Withdrawal || req.Type == model.Deposit) {
 		return http.StatusBadRequest, model.UpdateWalletBalanceResponse{}, errors.New("type is not withdrawal or deposit")
 	}
+	if len(req.AccountNumber) <= 0 {
+		return http.StatusBadRequest, model.UpdateWalletBalanceResponse{}, errors.New("account number is null")
+	}
 	if req.Type == model.Withdrawal {
 		req.Amount = req.Amount.Abs().Mul(decimal.NewFromInt(-1))
 	}
@@ -236,6 +239,9 @@ func (c *GatewayController) ListTransaction(ctx context.Context, requestID strin
 func (c *GatewayController) Transfer(ctx context.Context, requestID string, user model.User, req model.TransferRequest) (int, model.TransferResponse, error) {
 	if !(req.Type == model.InternalTransfer) {
 		return http.StatusBadRequest, model.TransferResponse{}, errors.New("type is not transfer")
+	}
+	if len(req.From) <= 0 || len(req.To) <= 0 {
+		return http.StatusBadRequest, model.TransferResponse{}, errors.New("account number is not null")
 	}
 	req.Amount = req.Amount.Abs()
 
