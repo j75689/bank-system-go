@@ -1,5 +1,9 @@
 # bank-system-go
 
+## Infrastructure
+
+![infrastructure](infra.png)
+
 ## Test
 #### Create User
 ```bash
