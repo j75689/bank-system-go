@@ -36,9 +36,10 @@ func NewKafkaMQ(option KafkaOption) (*KafkaMQ, error) {
 	saramaSubscriberConfig.Consumer.Offsets.Initial = option.OffsetsInitial
 	subscriber, err := kafka.NewSubscriber(
 		kafka.SubscriberConfig{
-			Brokers:       option.Brokers,
-			Unmarshaler:   kafka.DefaultMarshaler{},
-			ConsumerGroup: option.ConsumerGroup,
+			Brokers:               option.Brokers,
+			Unmarshaler:           kafka.DefaultMarshaler{},
+			OverwriteSaramaConfig: saramaSubscriberConfig,
+			ConsumerGroup:         option.ConsumerGroup,
 		}, option.LoggerAdapter,
 	)
 	if err != nil {
